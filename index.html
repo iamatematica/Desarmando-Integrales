@@ -1,0 +1,1232 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Desarmando Integrales · UNSAM Cálculo</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,400;1,600&family=DM+Sans:wght@300;400;500;600&family=Fira+Code:wght@400;500&display=swap"
+    rel="stylesheet"
+  />
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- KaTeX CSS -->
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"
+  />
+
+  <!-- KaTeX JS (defer) -->
+  <script
+    defer
+    src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"
+  ></script>
+
+  <!-- KaTeX Auto-render (defer, fires initMath when loaded) -->
+  <script
+    defer
+    src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+    onload="initMath()"
+  ></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            ink:   '#0e1c33',
+            chalk: '#f5f1eb',
+            gold:  '#c9933a',
+            jade:  '#0e7a68',
+            slate: '#4a5568',
+          },
+          fontFamily: {
+            display: ['"Cormorant Garamond"', 'Georgia', 'serif'],
+            body:    ['"DM Sans"', 'sans-serif'],
+            mono:    ['"Fira Code"', 'monospace'],
+          },
+        },
+      },
+    };
+  </script>
+
+  <style>
+    /* ──────────────────────────────────────────
+       Base
+    ────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background-color: #f5f1eb;
+      color: #0e1c33;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    h1, h2, h3, h4 {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+    }
+
+    code, .font-mono {
+      font-family: 'Fira Code', monospace;
+    }
+
+    /* ──────────────────────────────────────────
+       KaTeX overrides – breathing room
+    ────────────────────────────────────────── */
+    .katex-display { margin: 0.6em 0 !important; overflow-x: auto; }
+    .katex { font-size: 1.1em; }
+
+    /* ──────────────────────────────────────────
+       Step reveal animation
+    ────────────────────────────────────────── */
+    .step-block {
+      opacity: 0;
+      transform: translateY(18px);
+      transition: opacity .45s ease, transform .45s ease;
+    }
+    .step-block.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ──────────────────────────────────────────
+       Progress pips
+    ────────────────────────────────────────── */
+    .pip {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: rgba(255,255,255,.25);
+      transition: background .3s;
+    }
+    .pip.done { background: #c9933a; }
+    .pip.done-teal { background: #34d399; }
+
+    /* ──────────────────────────────────────────
+       Pulse glow on the NEXT available button
+    ────────────────────────────────────────── */
+    @keyframes softGlow {
+      0%,100% { box-shadow: 0 0 0 0 rgba(201,147,58,.35); }
+      50%      { box-shadow: 0 0 0 10px rgba(201,147,58,0); }
+    }
+    .btn-glow { animation: softGlow 2.2s ease infinite; }
+
+    @keyframes softGlowTeal {
+      0%,100% { box-shadow: 0 0 0 0 rgba(14,122,104,.35); }
+      50%      { box-shadow: 0 0 0 10px rgba(14,122,104,0); }
+    }
+    .btn-glow-teal { animation: softGlowTeal 2.2s ease infinite; }
+
+    /* ──────────────────────────────────────────
+       Hero decorative formulas
+    ────────────────────────────────────────── */
+    .deco-formula {
+      position: absolute;
+      opacity: .045;
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(3rem, 7vw, 6rem);
+      color: #fff;
+      user-select: none;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+
+    /* ──────────────────────────────────────────
+       Scrollbar
+    ────────────────────────────────────────── */
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: #f5f1eb; }
+    ::-webkit-scrollbar-thumb { background: #0e1c33; border-radius: 3px; }
+
+    /* ──────────────────────────────────────────
+       Sticky nav
+    ────────────────────────────────────────── */
+    #site-nav {
+      transition: background .3s, box-shadow .3s;
+    }
+    #site-nav.scrolled {
+      background: rgba(14,28,51,.97);
+      box-shadow: 0 2px 20px rgba(0,0,0,.3);
+    }
+
+    /* ──────────────────────────────────────────
+       ILATE grid
+    ────────────────────────────────────────── */
+    .ilate-card {
+      transition: transform .2s, box-shadow .2s;
+    }
+    .ilate-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 10px 30px rgba(0,0,0,.1);
+    }
+
+    /* ──────────────────────────────────────────
+       Practice cards
+    ────────────────────────────────────────── */
+    .practice-card {
+      border-top: 4px solid;
+      transition: transform .2s;
+    }
+    .practice-card:hover { transform: translateY(-3px); }
+
+    /* ──────────────────────────────────────────
+       Reveal transition for hints/solutions
+    ────────────────────────────────────────── */
+    .collapsible {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height .5s ease;
+    }
+    .collapsible.open { max-height: 600px; }
+
+    /* ──────────────────────────────────────────
+       Section divider
+    ────────────────────────────────────────── */
+    .section-badge {
+      display: inline-block;
+      font-family: 'Fira Code', monospace;
+      font-size: .7rem;
+      letter-spacing: .15em;
+      text-transform: uppercase;
+      padding: .25rem .75rem;
+      border-radius: 999px;
+    }
+
+    /* ──────────────────────────────────────────
+       Comparison table bottom section
+    ────────────────────────────────────────── */
+    .compare-row:not(:last-child) {
+      border-bottom: 1px solid rgba(255,255,255,.1);
+    }
+  </style>
+</head>
+
+<body>
+
+<!-- ══════════════════════════════════════════════════
+     STICKY NAV
+══════════════════════════════════════════════════ -->
+<nav id="site-nav" class="fixed top-0 left-0 w-full z-50 py-3 px-6 flex items-center justify-between">
+  <div class="flex items-center gap-3">
+    <button onclick="goTo('hero')" class="text-white font-display text-lg font-semibold tracking-wide opacity-90 hover:opacity-100 transition-opacity cursor-pointer bg-transparent border-0 p-0">
+      ∫ UNSAM
+    </button>
+    <span class="text-white/25 text-sm">·</span>
+    <span class="text-white/75 font-body text-sm tracking-wide">Prof. Ariel Cardozo</span>
+  </div>
+  <div class="flex items-center gap-1 text-white/70 text-sm font-body">
+    <button onclick="goTo('modulo1')" class="hover:text-white transition px-3 py-1 rounded-full hover:bg-white/10 cursor-pointer bg-transparent border-0 text-white/70 text-sm">Sustitución</button>
+    <button onclick="goTo('modulo2')" class="hover:text-white transition px-3 py-1 rounded-full hover:bg-white/10 cursor-pointer bg-transparent border-0 text-white/70 text-sm">Por Partes</button>
+    <button onclick="goTo('practica')" class="bg-gold/80 hover:bg-gold text-white rounded-full px-4 py-1.5 transition font-medium text-sm cursor-pointer border-0">
+      Practicar
+    </button>
+  </div>
+</nav>
+
+
+<!-- ══════════════════════════════════════════════════
+     HERO
+══════════════════════════════════════════════════ -->
+<header id="hero" class="relative min-h-screen bg-ink overflow-hidden flex flex-col"
+  style="background: radial-gradient(ellipse at 30% 40%, #162545 0%, #0e1c33 60%, #07111f 100%);">
+
+  <!-- Grid overlay -->
+  <div class="absolute inset-0 opacity-30"
+    style="background-image: linear-gradient(rgba(255,255,255,.04) 1px, transparent 1px),
+                             linear-gradient(90deg, rgba(255,255,255,.04) 1px, transparent 1px);
+           background-size: 50px 50px;">
+  </div>
+
+  <!-- Decorative formulas scattered in background -->
+  <span class="deco-formula" style="top:8%; left:3%; transform:rotate(-8deg);">\[\int f'(g) \cdot g'\,dx\]</span>
+  <span class="deco-formula" style="top:60%; right:2%; transform:rotate(6deg);">uv - ∫v du</span>
+  <span class="deco-formula" style="bottom:12%; left:5%; transform:rotate(-4deg);">du = g'(x) dx</span>
+  <span class="deco-formula" style="top:25%; right:8%; transform:rotate(10deg);">ILATE</span>
+
+  <!-- Glowing circles -->
+  <div class="absolute top-24 right-16 w-72 h-72 rounded-full border border-white/5"></div>
+  <div class="absolute top-12 right-8  w-96 h-96 rounded-full border border-white/5"></div>
+  <div class="absolute bottom-24 left-8 w-52 h-52 rounded-full border border-white/5"></div>
+
+  <!-- Gold accent line top -->
+  <div class="absolute top-0 left-0 w-full h-px"
+    style="background: linear-gradient(90deg, transparent, rgba(201,147,58,.7), transparent);"></div>
+
+  <!-- Content — grows to fill space, pushes scroll nudge to bottom -->
+  <div class="relative z-10 flex-1 flex flex-col items-center justify-center text-center px-6 max-w-4xl mx-auto w-full pt-24 pb-10">
+
+    <!-- Badge -->
+    <div class="inline-flex items-center gap-2.5 bg-white/8 border border-white/15 backdrop-blur-sm
+                rounded-full px-5 py-2 mb-10">
+      <span class="w-2 h-2 rounded-full bg-gold animate-pulse"></span>
+      <span class="text-white/75 font-mono text-xs tracking-widest uppercase">UNSAM · Análisis Matemático I</span>
+    </div>
+
+    <!-- Title -->
+    <h1 class="text-white leading-none mb-6"
+        style="font-size: clamp(3.5rem, 9vw, 7.5rem); font-family: 'Cormorant Garamond', serif; font-weight:700;">
+      Desarmando<br>
+      <em style="color: #c9933a;">Integrales</em>
+    </h1>
+
+    <!-- Display math -->
+    <div class="text-white/35 my-6 text-xl" id="hero-math">
+      \[\int u\,dv \;=\; uv \;-\; \int v\,du\]
+    </div>
+
+    <!-- Subtitle -->
+    <p class="text-white/65 font-body text-lg max-w-2xl mx-auto leading-relaxed mb-12">
+      Una guía paso a paso, sin carreras, con las conexiones que los libros no siempre muestran.
+      Aprendé <em>por qué</em> funcionan las técnicas, no solo <em>cómo</em> aplicarlas.
+    </p>
+
+    <!-- CTA nav pills -->
+    <div class="flex flex-wrap justify-center gap-3">
+      <button onclick="goTo('previos')"
+         class="font-body text-white/80 border border-white/20 hover:border-white/50 rounded-full
+                px-6 py-3 transition-all hover:bg-white/10 text-sm bg-transparent cursor-pointer">
+        🔗 Conocimientos previos
+      </button>
+      <button onclick="goTo('modulo1')"
+         class="font-body text-white/80 border border-white/20 hover:border-white/50 rounded-full
+                px-6 py-3 transition-all hover:bg-white/10 text-sm bg-transparent cursor-pointer">
+        📦 Sustitución
+      </button>
+      <button onclick="goTo('modulo2')"
+         class="font-body text-white/80 border border-white/20 hover:border-white/50 rounded-full
+                px-6 py-3 transition-all hover:bg-white/10 text-sm bg-transparent cursor-pointer">
+        🔄 Por Partes
+      </button>
+      <button onclick="goTo('practica')"
+         class="font-body font-semibold text-ink rounded-full px-6 py-3 transition-all
+                hover:opacity-90 text-sm cursor-pointer border-0"
+         style="background:#c9933a;">
+        ✏️ Zona de práctica
+      </button>
+    </div>
+  </div>
+
+  <!-- Scroll nudge — in normal flow at the very bottom of the flex column, never overlaps -->
+  <div class="relative z-10 flex flex-col items-center gap-2 pb-8 pointer-events-none">
+    <span class="text-white/30 font-mono text-xs tracking-widest">scroll</span>
+    <div class="w-5 h-9 border border-white/20 rounded-full flex items-start justify-center pt-1.5">
+      <div class="w-1 h-2.5 bg-white/40 rounded-full animate-bounce"></div>
+    </div>
+  </div>
+
+</header>
+
+
+<!-- ══════════════════════════════════════════════════
+     SECCIÓN 0 · CONOCIMIENTOS PREVIOS
+══════════════════════════════════════════════════ -->
+<section id="previos" class="bg-white py-20 px-6">
+  <div class="max-w-4xl mx-auto">
+
+    <div class="text-center mb-12">
+      <span class="section-badge bg-ink text-white mb-4">Antes de empezar</span>
+      <h2 class="font-display text-5xl text-ink mt-3">
+        ¿De dónde vienen estas técnicas?
+      </h2>
+      <p class="font-body text-slate mt-4 max-w-2xl mx-auto">
+        Las técnicas de integración no son fórmulas caídas del cielo.
+        Cada una es la <strong>inversa de una regla de derivación</strong> que ya conocés.
+      </p>
+    </div>
+
+    <!-- Two‑column grid -->
+    <div class="grid md:grid-cols-2 gap-6 mb-10">
+
+      <!-- Regla de la cadena → Sustitución -->
+      <div class="rounded-2xl border border-blue-100 overflow-hidden">
+        <div class="bg-ink px-6 py-4 flex items-center gap-3">
+          <span class="text-gold text-2xl">→</span>
+          <h3 class="font-display text-white text-xl">Regla de la Cadena</h3>
+        </div>
+        <div class="p-6 bg-blue-50/50">
+          <p class="font-body text-slate text-sm mb-3">Cuando derivás una composición:</p>
+          <div class="bg-white rounded-xl p-4 text-center border border-blue-100">
+            \[\frac{d}{dx}[f(g(x))] = f'(g(x)) \cdot g'(x)\]
+          </div>
+          <div class="mt-4 flex items-center gap-2 text-sm font-body text-blue-800">
+            <span class="bg-blue-100 text-blue-700 rounded-full px-3 py-1 text-xs font-mono">inversa ↩</span>
+            <span>Sustitución: integramos ese mismo patrón hacia atrás.</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Regla del producto → Por Partes -->
+      <div class="rounded-2xl border border-teal-100 overflow-hidden">
+        <div class="bg-jade px-6 py-4 flex items-center gap-3">
+          <span class="text-green-200 text-2xl">⇄</span>
+          <h3 class="font-display text-white text-xl">Regla del Producto</h3>
+        </div>
+        <div class="p-6 bg-teal-50/50">
+          <p class="font-body text-slate text-sm mb-3">Cuando derivás un producto:</p>
+          <div class="bg-white rounded-xl p-4 text-center border border-teal-100">
+            \[\frac{d}{dx}[u \cdot v] = u'v + uv'\]
+          </div>
+          <div class="mt-4 flex items-center gap-2 text-sm font-body text-teal-800">
+            <span class="bg-teal-100 text-teal-700 rounded-full px-3 py-1 text-xs font-mono">inversa ↩</span>
+            <span>Por Partes: integramos ambos lados y despejamos.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Callout -->
+    <div class="bg-ink/5 border border-ink/10 rounded-2xl p-6 text-center">
+      <p class="font-body text-ink/80 leading-relaxed">
+        💡 <strong>Para reflexionar:</strong> a diferencia de la derivación —que tiene reglas mecánicas para todo—,
+        la integración es más un <em>arte de reconocimiento de patrones</em>.
+        Las técnicas que vas a ver son herramientas para transformar integrales complicadas
+        en integrales conocidas.
+      </p>
+    </div>
+
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════
+     MÓDULO 1 · SUSTITUCIÓN
+══════════════════════════════════════════════════ -->
+<section id="modulo1" style="background:#f5f1eb;" class="py-20 px-6">
+  <div class="max-w-4xl mx-auto">
+
+    <!-- Header -->
+    <div class="flex items-center gap-4 mb-3">
+      <span class="section-badge bg-ink text-white">Módulo 1</span>
+      <div class="h-px flex-1 bg-ink/15"></div>
+    </div>
+    <h2 class="font-display text-6xl text-ink mb-2">Integración por</h2>
+    <h2 class="font-display text-6xl italic text-gold mb-8">Sustitución</h2>
+
+    <!-- Intuition box -->
+    <div class="bg-white rounded-2xl shadow-sm border border-black/5 p-8 mb-8">
+      <h3 class="font-display text-3xl text-ink mb-4">La metáfora de la mochila</h3>
+      <p class="font-body text-slate leading-relaxed mb-4">
+        Imaginá que tenés que describir un viaje muy complicado.
+        En lugar de detallar cada elemento de tu equipaje, ponés todo en una
+        <strong class="text-ink">mochila</strong> y la llamás simplemente <em>"la mochila"</em>.
+        Eso es la sustitución: le ponemos un nombre corto (\(u\)) a una expresión compleja
+        para simplificar todo lo que rodea.
+      </p>
+      <p class="font-body text-slate leading-relaxed mb-4">
+        Cuando vemos \(\int 2x\cos(x^2)\,dx\), la parte "complicada" dentro del coseno es \(x^2\).
+        Pero notamos que <strong>\(2x\)</strong> — la derivada de \(x^2\) — también está presente.
+        Esa coincidencia es la <strong class="text-ink">señal</strong> de que la sustitución va a funcionar.
+      </p>
+      <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 font-body text-amber-900 text-sm">
+        🔍 <strong>La clave:</strong> buscamos una función interna \(g(x)\) tal que
+        su derivada \(g'(x)\) también aparezca en la integral (aunque sea multiplicada por una constante).
+      </div>
+    </div>
+
+    <!-- Interactive Example -->
+    <div class="bg-white rounded-2xl shadow-sm border border-black/5 overflow-hidden mb-8">
+
+      <!-- Card header -->
+      <div class="bg-ink px-8 py-5 flex items-center justify-between">
+        <div>
+          <h3 class="font-display text-white text-2xl">Ejemplo guiado</h3>
+          <p class="font-body text-white/50 text-sm mt-0.5">Hacé clic en cada paso para avanzar</p>
+        </div>
+        <!-- Progress pips -->
+        <div class="flex gap-2" id="sub-pips">
+          <div class="pip" id="sub-pip-1"></div>
+          <div class="pip" id="sub-pip-2"></div>
+          <div class="pip" id="sub-pip-3"></div>
+          <div class="pip" id="sub-pip-4"></div>
+        </div>
+      </div>
+
+      <div class="p-8">
+        <!-- Problem statement (always visible) -->
+        <div class="text-center mb-8">
+          <p class="text-slate font-body text-sm mb-2">Queremos calcular:</p>
+          <div class="text-2xl">\[\int 2x\cos(x^2)\,dx\]</div>
+        </div>
+
+        <!-- STEP BUTTONS + CONTENTS -->
+        <div class="space-y-4" id="sub-steps-container">
+
+          <!-- ── Step 1 ── -->
+          <button id="sub-btn-1" onclick="subReveal(1)"
+            class="btn-glow w-full text-left bg-ink hover:bg-ink/90 text-white rounded-xl
+                   px-5 py-4 font-body flex items-center gap-4 transition-all">
+            <span class="flex-shrink-0 w-8 h-8 rounded-full bg-gold text-ink font-bold
+                         flex items-center justify-center text-sm">1</span>
+            Identificar la función interna — elegir <em>u</em>
+          </button>
+
+          <div id="sub-content-1"
+            class="step-block hidden bg-blue-50 border border-blue-100 rounded-xl p-6">
+            <div class="flex gap-4">
+              <span class="text-2xl flex-shrink-0">🔍</span>
+              <div>
+                <h4 class="font-display text-ink text-xl mb-2">Elegimos <em>u = x²</em></h4>
+                <p class="font-body text-slate text-sm leading-relaxed mb-3">
+                  Miramos la integral y preguntamos: ¿hay una función "adentro de otra"?
+                  Sí: el coseno actúa sobre \(x^2\). Ese argumento interno es nuestro candidato a \(u\).
+                </p>
+                <p class="font-body text-slate text-sm leading-relaxed mb-4">
+                  Además, comprobamos que la derivada de \(x^2\) — es decir, \(2x\) —
+                  <strong>ya está presente</strong> en la integral multiplicando. ¡La sustitución va a funcionar!
+                </p>
+                <div class="bg-white rounded-xl p-4 text-center border border-blue-200">
+                  \[u = x^2\]
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── Step 2 ── -->
+          <button id="sub-btn-2" onclick="subReveal(2)"
+            class="hidden w-full text-left bg-ink hover:bg-ink/90 text-white rounded-xl
+                   px-5 py-4 font-body flex items-center gap-4 transition-all">
+            <span class="flex-shrink-0 w-8 h-8 rounded-full bg-gold text-ink font-bold
+                         flex items-center justify-center text-sm">2</span>
+            Derivar <em>u</em> para encontrar <em>du</em>
+          </button>
+
+          <div id="sub-content-2"
+            class="step-block hidden bg-blue-50 border border-blue-100 rounded-xl p-6">
+            <div class="flex gap-4">
+              <span class="text-2xl flex-shrink-0">✏️</span>
+              <div class="flex-1">
+                <h4 class="font-display text-ink text-xl mb-2">Calculamos <em>du</em></h4>
+                <p class="font-body text-slate text-sm leading-relaxed mb-4">
+                  Derivamos \(u = x^2\) respecto de \(x\):
+                </p>
+                <div class="bg-white rounded-xl p-4 text-center border border-blue-200 mb-3">
+                  \[\frac{du}{dx} = 2x \quad\Longrightarrow\quad du = 2x\,dx\]
+                </div>
+                <div class="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm font-body text-amber-900">
+                  💡 <strong>¡Atención!</strong> \(2x\,dx\) es <em>exactamente</em> lo que aparece
+                  en la integral original. Eso confirma que la elección de \(u\) fue perfecta.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── Step 3 ── -->
+          <button id="sub-btn-3" onclick="subReveal(3)"
+            class="hidden w-full text-left bg-ink hover:bg-ink/90 text-white rounded-xl
+                   px-5 py-4 font-body flex items-center gap-4 transition-all">
+            <span class="flex-shrink-0 w-8 h-8 rounded-full bg-gold text-ink font-bold
+                         flex items-center justify-center text-sm">3</span>
+            Reescribir la integral en términos de <em>u</em>
+          </button>
+
+          <div id="sub-content-3"
+            class="step-block hidden bg-blue-50 border border-blue-100 rounded-xl p-6">
+            <div class="flex gap-4">
+              <span class="text-2xl flex-shrink-0">🔄</span>
+              <div class="flex-1">
+                <h4 class="font-display text-ink text-xl mb-2">La integral se simplifica</h4>
+                <p class="font-body text-slate text-sm leading-relaxed mb-4">
+                  Reemplazamos \(x^2 \to u\) y \(2x\,dx \to du\):
+                </p>
+                <div class="bg-white rounded-xl p-4 text-center border border-blue-200 mb-3">
+                  \[
+                    \int \underbrace{2x\,dx}_{du}\,\cos\!\bigl(\underbrace{x^2}_{u}\bigr)
+                    \;=\; \int \cos(u)\,du
+                  \]
+                </div>
+                <div class="bg-green-50 border border-green-200 rounded-lg p-3 text-sm font-body text-green-900">
+                  ✅ Ahora tenemos una integral estándar que ya sabemos resolver.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── Step 4 ── -->
+          <button id="sub-btn-4" onclick="subReveal(4)"
+            class="hidden w-full text-left bg-ink hover:bg-ink/90 text-white rounded-xl
+                   px-5 py-4 font-body flex items-center gap-4 transition-all">
+            <span class="flex-shrink-0 w-8 h-8 rounded-full bg-gold text-ink font-bold
+                         flex items-center justify-center text-sm">4</span>
+            Resolver la integral y deshacer la sustitución
+          </button>
+
+          <div id="sub-content-4" class="step-block hidden">
+            <div class="bg-ink rounded-xl p-7 text-white">
+              <div class="flex gap-4">
+                <span class="text-3xl flex-shrink-0">🎯</span>
+                <div class="flex-1">
+                  <h4 class="font-display text-white text-2xl mb-4">Resultado final</h4>
+                  <div class="space-y-4">
+                    <div class="bg-white/10 rounded-xl p-4 text-center">
+                      \[\int \cos(u)\,du = \sin(u) + C\]
+                    </div>
+                    <p class="font-body text-white/75 text-sm">
+                      Ahora volvemos a la variable original reemplazando \(u = x^2\):
+                    </p>
+                    <div class="rounded-xl p-5 text-center border-2 border-gold/70"
+                         style="background:rgba(201,147,58,.15);">
+                      \[\int 2x\cos(x^2)\,dx = \sin(x^2) + C\]
+                    </div>
+                    <div class="bg-white/8 rounded-lg p-3 text-sm font-body text-white/60">
+                      Verificación: \(\;\dfrac{d}{dx}[\sin(x^2)] = \cos(x^2)\cdot 2x\;\checkmark\)
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- /steps container -->
+      </div><!-- /p-8 -->
+    </div><!-- /card -->
+
+    <!-- Tips box -->
+    <div class="bg-ink/5 border border-ink/10 rounded-2xl p-7">
+      <h4 class="font-display text-ink text-2xl mb-4">🧭 ¿Cuándo conviene usar Sustitución?</h4>
+      <ul class="space-y-3 font-body text-slate">
+        <li class="flex items-start gap-3">
+          <span class="text-gold mt-0.5 font-bold flex-shrink-0">→</span>
+          <span>Cuando la integral contiene una <strong>función compuesta</strong>: una función "adentro de otra".</span>
+        </li>
+        <li class="flex items-start gap-3">
+          <span class="text-gold mt-0.5 font-bold flex-shrink-0">→</span>
+          <span>Cuando la <strong>derivada de la función interna</strong> aparece en la integral (multiplicando, aunque sea por una constante que podemos ajustar).</span>
+        </li>
+        <li class="flex items-start gap-3">
+          <span class="text-gold mt-0.5 font-bold flex-shrink-0">→</span>
+          <span>Formas típicas: \(\int f(g(x))\cdot g'(x)\,dx\), como \(\int e^{x^2}\cdot 2x\,dx\) o \(\int \dfrac{\cos(\ln x)}{x}\,dx\).</span>
+        </li>
+      </ul>
+    </div>
+
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════
+     MÓDULO 2 · INTEGRACIÓN POR PARTES
+══════════════════════════════════════════════════ -->
+<section id="modulo2" class="bg-white py-20 px-6">
+  <div class="max-w-4xl mx-auto">
+
+    <!-- Header -->
+    <div class="flex items-center gap-4 mb-3">
+      <span class="section-badge bg-jade text-white">Módulo 2</span>
+      <div class="h-px flex-1 bg-jade/20"></div>
+    </div>
+    <h2 class="font-display text-6xl text-ink mb-2">Integración</h2>
+    <h2 class="font-display text-6xl italic text-jade mb-8">por Partes</h2>
+
+    <!-- Formula derivation -->
+    <div class="bg-teal-50 rounded-2xl border border-teal-100 p-8 mb-8">
+      <h3 class="font-display text-3xl text-jade mb-4">¿Cómo se deduce la fórmula?</h3>
+      <p class="font-body text-slate leading-relaxed mb-5">
+        Partimos de la <strong>regla del producto</strong> para derivadas.
+        Si \(u\) y \(v\) son funciones de \(x\):
+      </p>
+      <div class="space-y-4">
+        <div class="bg-white rounded-xl p-4 text-center border border-teal-100">
+          \[(uv)' = u'v + uv'\]
+        </div>
+        <p class="font-body text-slate text-sm">Integramos ambos miembros:</p>
+        <div class="bg-white rounded-xl p-4 text-center border border-teal-100">
+          \[uv = \int u'v\,dx + \int uv'\,dx\]
+        </div>
+        <p class="font-body text-slate text-sm">
+          Despejando \(\int uv'\,dx\) y usando la notación \(dv = v'dx\), \(du = u'dx\):
+        </p>
+        <div class="bg-jade/10 border-2 border-jade/30 rounded-xl p-5 text-center">
+          \[\boxed{\int u\,dv = uv - \int v\,du}\]
+        </div>
+      </div>
+      <p class="font-body text-slate text-sm mt-4">
+        La idea es <em>transformar</em> una integral difícil \(\int u\,dv\)
+        en otra más fácil \(\int v\,du\). Por eso la elección de \(u\) y \(dv\) es crucial.
+      </p>
+    </div>
+
+    <!-- ILATE rule -->
+    <div class="bg-white rounded-2xl shadow-sm border border-black/5 p-8 mb-8">
+      <h3 class="font-display text-3xl text-ink mb-2">La regla <em>ILATE</em></h3>
+      <p class="font-body text-slate mb-6 text-sm">
+        Para elegir <strong>u</strong>, usá esta jerarquía: elegí la función que aparece
+        <strong>más arriba</strong> en la lista. Esa suele ser la "más conveniente" para derivar.
+      </p>
+      <div class="grid grid-cols-5 gap-3 mb-5">
+        <div class="ilate-card bg-purple-50 border border-purple-100 rounded-xl p-4 text-center cursor-default">
+          <div class="font-display text-3xl text-purple-700 mb-1.5 italic">I</div>
+          <div class="text-xs font-body text-purple-600 font-medium">Inversas<br>trigonométricas</div>
+          <div class="text-xs text-slate/60 mt-1.5 font-mono">\(\arctan,\arcsin\)</div>
+        </div>
+        <div class="ilate-card bg-blue-50 border border-blue-100 rounded-xl p-4 text-center cursor-default">
+          <div class="font-display text-3xl text-blue-700 mb-1.5 italic">L</div>
+          <div class="text-xs font-body text-blue-600 font-medium">Logaritmos</div>
+          <div class="text-xs text-slate/60 mt-1.5 font-mono">\(\ln x\)</div>
+        </div>
+        <div class="ilate-card bg-green-50 border border-green-100 rounded-xl p-4 text-center cursor-default">
+          <div class="font-display text-3xl text-green-700 mb-1.5 italic">A</div>
+          <div class="text-xs font-body text-green-600 font-medium">Algebraicas</div>
+          <div class="text-xs text-slate/60 mt-1.5 font-mono">\(x,\,x^2,\,x^3\)</div>
+        </div>
+        <div class="ilate-card bg-orange-50 border border-orange-100 rounded-xl p-4 text-center cursor-default">
+          <div class="font-display text-3xl text-orange-700 mb-1.5 italic">T</div>
+          <div class="text-xs font-body text-orange-600 font-medium">Trigono&shy;métricas</div>
+          <div class="text-xs text-slate/60 mt-1.5 font-mono">\(\sin,\cos\)</div>
+        </div>
+        <div class="ilate-card bg-red-50 border border-red-100 rounded-xl p-4 text-center cursor-default">
+          <div class="font-display text-3xl text-red-700 mb-1.5 italic">E</div>
+          <div class="text-xs font-body text-red-600 font-medium">Exponenciales</div>
+          <div class="text-xs text-slate/60 mt-1.5 font-mono">\(e^x,\,a^x\)</div>
+        </div>
+      </div>
+      <div class="bg-jade/5 border border-jade/15 rounded-xl p-4 text-sm font-body text-jade">
+        <div class="flex flex-col sm:flex-row sm:items-center gap-3">
+          <div class="flex-1">
+            💬 Mnemotécnico sugerido: <strong>"Un día vi, una vaca sin cola, vestida de uniforme"</strong>
+          </div>
+          <div class="bg-white border border-jade/20 rounded-lg px-4 py-2 text-center flex-shrink-0">
+            \(\displaystyle\int u\,dv = uv - \int v\,du\)
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Interactive example -->
+    <div class="bg-white rounded-2xl shadow-sm border border-black/5 overflow-hidden mb-8">
+
+      <!-- Card header -->
+      <div class="bg-jade px-8 py-5 flex items-center justify-between">
+        <div>
+          <h3 class="font-display text-white text-2xl">Ejemplo guiado</h3>
+          <p class="font-body text-white/50 text-sm mt-0.5">Hacé clic en cada paso para avanzar</p>
+        </div>
+        <div class="flex gap-2" id="parts-pips">
+          <div class="pip" id="parts-pip-1"></div>
+          <div class="pip" id="parts-pip-2"></div>
+          <div class="pip" id="parts-pip-3"></div>
+          <div class="pip" id="parts-pip-4"></div>
+        </div>
+      </div>
+
+      <div class="p-8">
+        <div class="text-center mb-8">
+          <p class="text-slate font-body text-sm mb-2">Queremos calcular:</p>
+          <div class="text-2xl">\[\int x\,e^x\,dx\]</div>
+          <p class="font-body text-slate/60 text-sm mt-2">
+            El producto clásico: función algebraica × exponencial.
+          </p>
+        </div>
+
+        <div class="space-y-4">
+
+          <!-- ── Step 1 ── -->
+          <button id="parts-btn-1" onclick="partsReveal(1)"
+            class="btn-glow-teal w-full text-left bg-jade hover:bg-jade/90 text-white rounded-xl
+                   px-5 py-4 font-body flex items-center gap-4 transition-all">
+            <span class="flex-shrink-0 w-8 h-8 rounded-full bg-teal-200 text-jade font-bold
+                         flex items-center justify-center text-sm">1</span>
+            Elegir <em>u</em> y <em>dv</em> usando ILATE
+          </button>
+
+          <div id="parts-content-1"
+            class="step-block hidden bg-teal-50 border border-teal-100 rounded-xl p-6">
+            <div class="flex gap-4">
+              <span class="text-2xl flex-shrink-0">🎯</span>
+              <div class="flex-1">
+                <h4 class="font-display text-jade text-xl mb-3">Aplicamos ILATE</h4>
+                <p class="font-body text-slate text-sm mb-4">
+                  Tenemos \(x\) (algebraica → posición <strong>A</strong>)
+                  y \(e^x\) (exponencial → posición <strong>E</strong>).
+                  La algebraica tiene mayor jerarquía, así que:
+                </p>
+                <div class="grid md:grid-cols-2 gap-4">
+                  <div class="bg-white rounded-xl p-4 text-center border border-teal-200">
+                    <p class="text-xs text-slate/60 font-body mb-2">Elegimos (derivar):</p>
+                    \[u = x\]
+                  </div>
+                  <div class="bg-white rounded-xl p-4 text-center border border-teal-200">
+                    <p class="text-xs text-slate/60 font-body mb-2">Elegimos (integrar):</p>
+                    \[dv = e^x\,dx\]
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── Step 2 ── -->
+          <button id="parts-btn-2" onclick="partsReveal(2)"
+            class="hidden w-full text-left bg-jade hover:bg-jade/90 text-white rounded-xl
+                   px-5 py-4 font-body flex items-center gap-4 transition-all">
+            <span class="flex-shrink-0 w-8 h-8 rounded-full bg-teal-200 text-jade font-bold
+                         flex items-center justify-center text-sm">2</span>
+            Calcular <em>du</em> y <em>v</em>
+          </button>
+
+          <div id="parts-content-2"
+            class="step-block hidden bg-teal-50 border border-teal-100 rounded-xl p-6">
+            <div class="flex gap-4">
+              <span class="text-2xl flex-shrink-0">✏️</span>
+              <div class="flex-1">
+                <h4 class="font-display text-jade text-xl mb-3">Derivamos e integramos</h4>
+                <div class="grid md:grid-cols-2 gap-4 mb-4">
+                  <div class="bg-white rounded-xl p-4 border border-teal-200">
+                    <p class="text-xs text-slate/60 font-body mb-2">De \(u = x\), derivamos:</p>
+                    \[du = dx\]
+                    <p class="text-xs text-slate/40 font-body mt-2">(la derivada de \(x\) es \(1\))</p>
+                  </div>
+                  <div class="bg-white rounded-xl p-4 border border-teal-200">
+                    <p class="text-xs text-slate/60 font-body mb-2">De \(dv = e^x dx\), integramos:</p>
+                    \[v = e^x\]
+                    <p class="text-xs text-slate/40 font-body mt-2">(no ponemos \(+C\) aquí)</p>
+                  </div>
+                </div>
+                <div class="bg-jade/10 border border-jade/20 rounded-lg p-3 text-sm font-body text-jade">
+                  📌 La razón por la que no ponemos \(+C\) al calcular \(v\) es que esa constante
+                  se va a cancelar cuando apliquemos la fórmula completa.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── Step 3 ── -->
+          <button id="parts-btn-3" onclick="partsReveal(3)"
+            class="hidden w-full text-left bg-jade hover:bg-jade/90 text-white rounded-xl
+                   px-5 py-4 font-body flex items-center gap-4 transition-all">
+            <span class="flex-shrink-0 w-8 h-8 rounded-full bg-teal-200 text-jade font-bold
+                         flex items-center justify-center text-sm">3</span>
+            Aplicar \(\int u\,dv = uv - \int v\,du\)
+          </button>
+
+          <div id="parts-content-3"
+            class="step-block hidden bg-teal-50 border border-teal-100 rounded-xl p-6">
+            <div class="flex gap-4">
+              <span class="text-2xl flex-shrink-0">🔧</span>
+              <div class="flex-1">
+                <h4 class="font-display text-jade text-xl mb-3">Ensamblamos la fórmula</h4>
+                <p class="font-body text-slate text-sm mb-4">
+                  Sustituimos \(u=x\), \(v=e^x\), \(du=dx\) en la fórmula:
+                </p>
+                <div class="bg-white rounded-xl p-4 text-center border border-teal-200 mb-3">
+                  \[
+                    \int x\,e^x\,dx
+                    = \underbrace{x}_{u}\cdot\underbrace{e^x}_{v}
+                    - \int \underbrace{e^x}_{v}\underbrace{\,dx}_{du}
+                  \]
+                </div>
+                <div class="bg-white rounded-xl p-4 text-center border border-teal-200 mb-3">
+                  \[= x\,e^x - \int e^x\,dx\]
+                </div>
+                <div class="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm font-body text-amber-900">
+                  🎉 ¡La integral que quedó es directa! Si hubiéramos elegido mal \(u\) y \(dv\),
+                  la integral resultante sería más complicada, no más simple.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── Step 4 ── -->
+          <button id="parts-btn-4" onclick="partsReveal(4)"
+            class="hidden w-full text-left bg-jade hover:bg-jade/90 text-white rounded-xl
+                   px-5 py-4 font-body flex items-center gap-4 transition-all">
+            <span class="flex-shrink-0 w-8 h-8 rounded-full bg-teal-200 text-jade font-bold
+                         flex items-center justify-center text-sm">4</span>
+            Resolver la integral restante y simplificar
+          </button>
+
+          <div id="parts-content-4" class="step-block hidden">
+            <div class="bg-jade rounded-xl p-7 text-white">
+              <div class="flex gap-4">
+                <span class="text-3xl flex-shrink-0">🏆</span>
+                <div class="flex-1">
+                  <h4 class="font-display text-white text-2xl mb-4">Resultado final</h4>
+                  <div class="space-y-4">
+                    <div class="bg-white/10 rounded-xl p-4 text-center">
+                      \[x\,e^x - \int e^x\,dx = x\,e^x - e^x + C\]
+                    </div>
+                    <p class="font-body text-white/70 text-sm">Factorizando \(e^x\):</p>
+                    <div class="rounded-xl p-5 text-center border-2 border-teal-300/50"
+                         style="background:rgba(52,211,153,.12);">
+                      \[\int x\,e^x\,dx = e^x(x-1) + C\]
+                    </div>
+                    <div class="bg-white/8 rounded-lg p-3 text-sm font-body text-white/55">
+                      Verificación: \(\;\dfrac{d}{dx}[e^x(x-1)] = e^x(x-1)+e^x\cdot 1 = e^x \cdot x = x\,e^x\;\checkmark\)
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- /steps -->
+      </div><!-- /p-8 -->
+    </div><!-- /card -->
+
+    <!-- Tips box -->
+    <div class="bg-jade/5 border border-jade/15 rounded-2xl p-7">
+      <h4 class="font-display text-jade text-2xl mb-4">🧭 ¿Cuándo conviene usar Por Partes?</h4>
+      <ul class="space-y-3 font-body text-slate">
+        <li class="flex items-start gap-3">
+          <span class="text-jade mt-0.5 font-bold flex-shrink-0">→</span>
+          <span>Cuando la integral es un <strong>producto de dos "familias" distintas</strong> de funciones (algebraica × trigonométrica, algebraica × exponencial, logarítmica × algebraica, etc.).</span>
+        </li>
+        <li class="flex items-start gap-3">
+          <span class="text-jade mt-0.5 font-bold flex-shrink-0">→</span>
+          <span>Cuando la sustitución no funciona porque no encontrás la derivada de la función interna.</span>
+        </li>
+        <li class="flex items-start gap-3">
+          <span class="text-jade mt-0.5 font-bold flex-shrink-0">→</span>
+          <span>Formas típicas: \(\int x\sin(x)\,dx\), \(\;\int x^2 e^x\,dx\), \(\;\int \ln(x)\,dx\), \(\;\int \arctan(x)\,dx\).</span>
+        </li>
+      </ul>
+    </div>
+
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════
+     COMPARACIÓN RÁPIDA
+══════════════════════════════════════════════════ -->
+<section class="py-16 px-6" style="background:#f5f1eb;">
+  <div class="max-w-4xl mx-auto">
+    <h3 class="font-display text-4xl text-ink text-center mb-8">¿Sustitución o Por Partes?</h3>
+
+    <div class="bg-ink rounded-2xl overflow-hidden">
+      <!-- Header row -->
+      <div class="grid grid-cols-3 border-b border-white/10">
+        <div class="p-4 font-body text-white/40 text-sm text-center">Señal en la integral</div>
+        <div class="p-4 font-body text-gold text-sm text-center font-semibold border-x border-white/10">Sustitución</div>
+        <div class="p-4 font-body text-teal-300 text-sm text-center font-semibold">Por Partes</div>
+      </div>
+      <!-- Rows -->
+      <div class="compare-row grid grid-cols-3">
+        <div class="p-4 font-body text-white/60 text-sm">Hay una función "adentro de otra"</div>
+        <div class="p-4 font-body text-gold/90 text-sm text-center border-x border-white/10">✅ Ideal</div>
+        <div class="p-4 font-body text-white/40 text-sm text-center">Raramente</div>
+      </div>
+      <div class="compare-row grid grid-cols-3">
+        <div class="p-4 font-body text-white/60 text-sm">La derivada de la función interna aparece multiplicando</div>
+        <div class="p-4 font-body text-gold/90 text-sm text-center border-x border-white/10">✅ Señal clara</div>
+        <div class="p-4 font-body text-white/40 text-sm text-center">No aplica</div>
+      </div>
+      <div class="compare-row grid grid-cols-3">
+        <div class="p-4 font-body text-white/60 text-sm">Producto de dos "familias" distintas (ej. \(x\cdot\sin x\))</div>
+        <div class="p-4 font-body text-white/40 text-sm text-center border-x border-white/10">Raramente</div>
+        <div class="p-4 font-body text-teal-300/90 text-sm text-center">✅ Ideal</div>
+      </div>
+      <div class="compare-row grid grid-cols-3">
+        <div class="p-4 font-body text-white/60 text-sm">Integral de \(\ln x\) o \(\arctan x\) sola</div>
+        <div class="p-4 font-body text-white/40 text-sm text-center border-x border-white/10">No aplica</div>
+        <div class="p-4 font-body text-teal-300/90 text-sm text-center">✅ Con \(dv=dx\)</div>
+      </div>
+      <div class="grid grid-cols-3 border-t border-white/10">
+        <div class="p-4 font-body text-white/40 text-sm">Si no funciona:</div>
+        <div class="p-4 font-body text-white/60 text-sm text-center border-x border-white/10">Probá Por Partes</div>
+        <div class="p-4 font-body text-white/60 text-sm text-center">Probá Sustitución o una combinación</div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════
+     MÓDULO 3 · ZONA DE PRÁCTICA
+══════════════════════════════════════════════════ -->
+<section id="practica" class="bg-ink py-20 px-6">
+  <div class="max-w-4xl mx-auto">
+
+    <!-- Header -->
+    <div class="text-center mb-14">
+      <span class="section-badge bg-white/10 text-white/70 mb-4">Módulo 3</span>
+      <h2 class="font-display text-6xl text-white mt-3 mb-4">Zona de Práctica</h2>
+      <p class="font-body text-white/55 max-w-xl mx-auto leading-relaxed">
+        Intentá resolver cada ejercicio por tu cuenta antes de pedir la pista.
+        La pista es una herramienta, no un atajo — usarla con intención forma mejores hábitos.
+      </p>
+    </div>
+
+    <!-- ── Exercise grid ── -->
+    <div class="grid md:grid-cols-2 gap-6 mb-10">
+
+      <!-- ── Exercise 1 · Sustitución ── -->
+      <div class="practice-card bg-white rounded-2xl overflow-hidden border-gold">
+        <div class="px-6 py-4 bg-gold/10 border-b border-gold/20 flex items-center gap-3">
+          <span class="w-7 h-7 rounded-full bg-gold text-white text-sm font-bold
+                       flex items-center justify-center">1</span>
+          <span class="font-body font-semibold text-ink text-sm">Sustitución</span>
+          <span class="ml-auto font-mono text-xs text-slate/50">★☆☆</span>
+        </div>
+        <div class="p-6">
+          <div class="text-center mb-2">\[\int 3x^2\,e^{x^3}\,dx\]</div>
+          <p class="font-body text-slate/70 text-sm text-center mb-6">
+            Identificá el patrón y elegí <em>u</em> adecuadamente.
+          </p>
+
+          <!-- Hint -->
+          <button onclick="togglePanel('hint1')"
+            class="w-full mb-3 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200
+                   rounded-xl px-4 py-3 font-body text-sm transition-all flex items-center gap-2">
+            <span>💡</span>
+            <span id="hint1-label">Pedir una pista</span>
+          </button>
+          <div id="hint1" class="collapsible mb-3">
+            <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 text-amber-900 text-sm font-body">
+              <strong>Pista:</strong> Observá que \(3x^2\) es exactamente la derivada de \(x^3\).
+              Si elegís \(u = x^3\), ¿qué obtenés para \(du\)?
+              Reemplazá y comprobá que la integral se vuelve \(\int e^u\,du\).
+            </div>
+          </div>
+
+          <!-- Solution -->
+          <button onclick="togglePanel('sol1')"
+            class="w-full bg-ink hover:bg-ink/90 text-white rounded-xl px-4 py-3
+                   font-body text-sm transition-all flex items-center gap-2">
+            <span>👁️</span>
+            <span id="sol1-label">Ver solución completa</span>
+          </button>
+          <div id="sol1" class="collapsible mt-3">
+            <div class="bg-gray-50 border border-gray-200 rounded-xl p-5 space-y-3">
+              <p class="font-body text-sm text-slate">
+                <strong>Sea</strong> \(u = x^3 \implies du = 3x^2\,dx\)
+              </p>
+              <div class="text-center">
+                \[\int \underbrace{3x^2\,dx}_{du}\,e^{\underbrace{x^3}_{u}} = \int e^u\,du = e^u + C\]
+              </div>
+              <div class="bg-green-50 border border-green-200 rounded-xl p-3 text-center">
+                \[\int 3x^2\,e^{x^3}\,dx = e^{x^3} + C\]
+              </div>
+              <p class="font-body text-xs text-slate/50 text-center">
+                Verificación: \(\dfrac{d}{dx}[e^{x^3}] = e^{x^3}\cdot 3x^2 \;\checkmark\)
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Exercise 2 · Por Partes ── -->
+      <div class="practice-card bg-white rounded-2xl overflow-hidden border-jade">
+        <div class="px-6 py-4 bg-jade/10 border-b border-jade/20 flex items-center gap-3">
+          <span class="w-7 h-7 rounded-full bg-jade text-white text-sm font-bold
+                       flex items-center justify-center">2</span>
+          <span class="font-body font-semibold text-ink text-sm">Por Partes</span>
+          <span class="ml-auto font-mono text-xs text-slate/50">★☆☆</span>
+        </div>
+        <div class="p-6">
+          <div class="text-center mb-2">\[\int x\sin(x)\,dx\]</div>
+          <p class="font-body text-slate/70 text-sm text-center mb-6">
+            Aplicá ILATE para decidir quién es \(u\) y quién es \(dv\).
+          </p>
+
+          <!-- Hint -->
+          <button onclick="togglePanel('hint2')"
+            class="w-full mb-3 bg-teal-50 hover:bg-teal-100 text-teal-800 border border-teal-200
+                   rounded-xl px-4 py-3 font-body text-sm transition-all flex items-center gap-2">
+            <span>💡</span>
+            <span id="hint2-label">Pedir una pista</span>
+          </button>
+          <div id="hint2" class="collapsible mb-3">
+            <div class="bg-teal-50 border border-teal-200 rounded-xl p-4 text-teal-900 text-sm font-body">
+              <strong>Pista:</strong> Por ILATE, \(x\) (algebraica → A) tiene mayor jerarquía
+              que \(\sin x\) (trigonométrica → T). Elegí \(u = x\), \(dv = \sin(x)\,dx\).
+              ¿Cuánto vale \(v = \int \sin(x)\,dx\)?
+            </div>
+          </div>
+
+          <!-- Solution -->
+          <button onclick="togglePanel('sol2')"
+            class="w-full bg-jade hover:bg-jade/90 text-white rounded-xl px-4 py-3
+                   font-body text-sm transition-all flex items-center gap-2">
+            <span>👁️</span>
+            <span id="sol2-label">Ver solución completa</span>
+          </button>
+          <div id="sol2" class="collapsible mt-3">
+            <div class="bg-gray-50 border border-gray-200 rounded-xl p-5 space-y-3">
+              <p class="font-body text-sm text-slate">
+                \(u = x \implies du = dx\)
+                &nbsp;&nbsp;|&nbsp;&nbsp;
+                \(dv = \sin(x)\,dx \implies v = -\cos(x)\)
+              </p>
+              <div class="text-center">
+                \[\int x\sin(x)\,dx = x(-\cos x) - \int(-\cos x)\,dx\]
+              </div>
+              <div class="text-center">
+                \[= -x\cos x + \int\cos x\,dx\]
+              </div>
+              <div class="bg-green-50 border border-green-200 rounded-xl p-3 text-center">
+                \[\int x\sin(x)\,dx = -x\cos(x) + \sin(x) + C\]
+              </div>
+              <p class="font-body text-xs text-slate/50 text-center">
+                Verificación: aplicá regla del producto a \(-x\cos x + \sin x\). ✓
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /grid -->
+
+    <!-- ── Bonus Exercise ── -->
+    <div class="bg-white/6 border border-white/10 rounded-2xl p-8 mb-10">
+      <div class="flex items-start gap-4">
+        <span class="text-3xl">🌟</span>
+        <div class="flex-1">
+          <h4 class="font-display text-white text-2xl mb-2">Ejercicio extra (desafío)</h4>
+          <p class="font-body text-white/60 text-sm mb-4">
+            Este integral requiere combinar ambas técnicas o aplicar Por Partes dos veces:
+          </p>
+          <div class="text-center text-white/80 mb-4">\[\int x^2\,e^x\,dx\]</div>
+          <p class="font-body text-white/45 text-xs">
+            <em>Pista:</em> Aplicá Por Partes con \(u = x^2\). Cuando llegués a \(\int xe^x\,dx\),
+            reconocerás el ejemplo del Módulo 2. ¡Podés continuar!
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Encouragement banner -->
+    <div class="text-center bg-gradient-to-br from-white/8 to-white/4
+                border border-white/15 rounded-2xl p-10">
+      <div class="text-5xl mb-4">🎓</div>
+      <h3 class="font-display text-3xl text-white mb-3">¡Muy bien por llegar hasta acá!</h3>
+      <p class="font-body text-white/60 max-w-lg mx-auto leading-relaxed">
+        La integración es una habilidad que mejora con práctica y con entender los <em>porqués</em>,
+        no solo los <em>cómos</em>. Cada vez que reconocés un patrón, tu cerebro construye
+        una nueva conexión. Seguí practicando — ¡vale la pena!
+      </p>
+    </div>
+
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════
+     FOOTER
+══════════════════════════════════════════════════ -->
+<footer class="bg-ink/95 border-t border-white/8 py-8 px-6 text-center">
+  <p class="font-display text-white/60 text-lg italic mb-1">
+    "La matemática no exige genios, exige constancia."
+  </p>
+  <p class="font-body text-white/30 text-xs mt-3">
+    Universidad Nacional de San Martín · Análisis Matemático I · Prof. Ariel Cardozo
+  </p>
+</footer>
+
+
+<!-- ══════════════════════════════════════════════════
+     JAVASCRIPT
+══════════════════════════════════════════════════ -->
+<script>
+  /* ─────────────────────────────────────────────────
+     KaTeX: render all math in the page (incl. hidden)
+  ───────────────────────────────────────────────── */
+  function initMath() {
+    renderMathInElement(document.body, {
+      delimiters: [
+        { left: '\\[', right: '\\]', display: true  },
+        { left: '\\(', right: '\\)', display: false },
+        { left: '$',   right: '$',   display: false },
+      ],
+      throwOnError: false,
+    });
+  }
+
+  /* ─────────────────────────────────────────────────
+     Generic step-reveal factory
+     prefix : 'sub' | 'parts'
+     total  : number of steps
+  ───────────────────────────────────────────────── */
+  function makeReveal(prefix, total) {
+    return function reveal(step) {
+      const btn     = document.getElementById(`${prefix}-btn-${step}`);
+      const content = document.getElementById(`${prefix}-content-${step}`);
+      const pip     = document.getElementById(`${prefix}-pip-${step}`);
+      const nextBtn = step < total ? document.getElementById(`${prefix}-btn-${step + 1}`) : null;
+
+      // Disable this button
+      if (btn) {
+        btn.disabled = true;
+        btn.classList.remove('btn-glow', 'btn-glow-teal');
+        btn.style.cssText += 'opacity:.55;cursor:not-allowed;pointer-events:none;';
+      }
+
+      // Show content with animation
+      if (content) {
+        content.classList.remove('hidden');
+        // Trigger transition on next paint
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => content.classList.add('visible'));
+        });
+        // Scroll into view smoothly
+        setTimeout(() => content.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 80);
+      }
+
+      // Light up pip
+      if (pip) {
+        pip.classList.add(prefix === 'sub' ? 'done' : 'done-teal');
+      }
+
+      // Show next button
+      if (nextBtn) {
+        nextBtn.classList.remove('hidden');
+        nextBtn.classList.add(prefix === 'sub' ? 'btn-glow' : 'btn-glow-teal');
+      }
+    };
+  }
+
+  const subReveal   = makeReveal('sub',   4);
+  const partsReveal = makeReveal('parts', 4);
+
+  /* ─────────────────────────────────────────────────
+     Collapsible panels (hints & solutions)
+  ───────────────────────────────────────────────── */
+  function togglePanel(id) {
+    const el    = document.getElementById(id);
+    const isOpen = el.classList.contains('open');
+    el.classList.toggle('open', !isOpen);
+
+    // Update button label
+    const labelMap = {
+      hint1: ['Pedir una pista', 'Ocultar pista'],
+      hint2: ['Pedir una pista', 'Ocultar pista'],
+      sol1:  ['Ver solución completa', 'Ocultar solución'],
+      sol2:  ['Ver solución completa', 'Ocultar solución'],
+    };
+    const labelEl = document.getElementById(`${id}-label`);
+    if (labelEl && labelMap[id]) {
+      labelEl.textContent = isOpen ? labelMap[id][0] : labelMap[id][1];
+    }
+
+    // Scroll into view if opening
+    if (!isOpen) {
+      setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 80);
+    }
+  }
+
+  /* ─────────────────────────────────────────────────
+     Scroll helper – named goTo to avoid conflict with
+     native window.scrollTo()
+  ───────────────────────────────────────────────── */
+  function goTo(id) {
+    const el = document.getElementById(id);
+    if (el) el.scrollIntoView({ behavior: 'smooth' });
+  }
+
+  /* ─────────────────────────────────────────────────
+     Sticky nav: darken on scroll
+  ───────────────────────────────────────────────── */
+  const nav = document.getElementById('site-nav');
+  window.addEventListener('scroll', () => {
+    nav.classList.toggle('scrolled', window.scrollY > 60);
+  }, { passive: true });
+</script>
+
+</body>
+</html>
